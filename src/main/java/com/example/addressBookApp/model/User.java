@@ -2,6 +2,7 @@ package com.example.addressBookApp.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -23,4 +24,8 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    //UC6
+    private String resetToken;
+    private LocalDateTime tokenExpiry;
 }
