@@ -5,9 +5,12 @@ package com.example.addressBookApp.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Table(name = "contacts")
-public class AddressBookEntry {
+public class AddressBookEntry implements Serializable {
+    private static final long serialVersionUID = 1L;  // Add serialVersionUID
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
