@@ -27,6 +27,10 @@ public class SecurityConfig {
                         // Allow GET requests for contacts without authentication (Optional)
                         .requestMatchers("/api/addressbook").permitAll()
 
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
