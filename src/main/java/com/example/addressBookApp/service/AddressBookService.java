@@ -1,6 +1,6 @@
 package com.example.addressBookApp.service;
 
-//UC7
+//UC12
 
 import com.example.addressBookApp.dto.AddressBookDTO;
 import com.example.addressBookApp.interfaces.IAddressBookService;
@@ -11,12 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AddressBookService implements IAddressBookService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AddressBookService.class);
 
     @Autowired
     private AddressBookRepository repository;
@@ -28,46 +32,137 @@ public class AddressBookService implements IAddressBookService {
     @Override
     @Cacheable(value = "contacts")
     public List<AddressBookEntry> getAllContacts() {
-        System.out.println("📢 Fetching from Database...");
-        return repository.findAll();
+        logger.info("Fetching all contacts from the database...");
+        List<AddressBookEntry> contacts = repository.findAll();
+        logger.debug("Retrieved {} contacts from the database.", contacts.size());
+        return contacts;
     }
 
     @Override
     public Optional<AddressBookEntry> getContactById(Long id) {
-        return repository.findById(id);
+        logger.info("Fetching contact with ID: {}", id);
+        Optional<AddressBookEntry> contact = repository.findById(id);
+        if (contact.isPresent()) {
+            logger.debug("Contact found: {}", contact.get());
+        } else {
+            logger.warn("Contact with ID {} not found.", id);
+        }
+        return contact;
     }
 
     // ✅ Evict cache when a new contact is added
     @Override
     @CacheEvict(value = "contacts", allEntries = true)
     public AddressBookEntry addContact(AddressBookDTO contactDTO) {
-        System.out.println("🗑️ Clearing Cache: New contact added!");
+        logger.info("Adding a new contact: {}", contactDTO.getName());
         AddressBookEntry contact = modelMapper.map(contactDTO, AddressBookEntry.class);
-        return repository.save(contact);
+        AddressBookEntry savedContact = repository.save(contact);
+        logger.info("New contact added successfully with ID: {}", savedContact.getId());
+        return savedContact;
     }
 
     // ✅ Evict cache when a contact is updated
     @Override
     @CacheEvict(value = "contacts", allEntries = true)
     public AddressBookEntry updateContact(Long id, AddressBookDTO updatedContactDTO) {
+        logger.info("Updating contact with ID: {}", id);
         Optional<AddressBookEntry> existingContact = repository.findById(id);
+
         if (existingContact.isPresent()) {
             AddressBookEntry contact = modelMapper.map(updatedContactDTO, AddressBookEntry.class);
             contact.setId(id);
-            System.out.println("🗑️ Clearing Cache: Contact updated!");
-            return repository.save(contact);
+            AddressBookEntry updatedContact = repository.save(contact);
+            logger.info("Contact updated successfully: {}", updatedContact);
+            return updatedContact;
+        } else {
+            logger.warn("Contact with ID {} not found for update.", id);
+            return null;
         }
-        return null;
     }
 
     // ✅ Evict cache when a contact is deleted
     @Override
     @CacheEvict(value = "contacts", allEntries = true)
     public void deleteContact(Long id) {
-        System.out.println("🗑️ Clearing Cache: Contact deleted!");
-        repository.deleteById(id);
+        logger.info("Deleting contact with ID: {}", id);
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            logger.info("Contact deleted successfully.");
+        } else {
+            logger.warn("Contact with ID {} not found for deletion.", id);
+        }
     }
 }
+
+
+//UC7
+
+//import com.example.addressBookApp.dto.AddressBookDTO;
+//import com.example.addressBookApp.interfaces.IAddressBookService;
+//import com.example.addressBookApp.model.AddressBookEntry;
+//import com.example.addressBookApp.repository.AddressBookRepository;
+//import org.modelmapper.ModelMapper;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.cache.annotation.CacheEvict;
+//import org.springframework.cache.annotation.Cacheable;
+//import org.springframework.stereotype.Service;
+//
+//import java.util.List;
+//import java.util.Optional;
+//
+//@Service
+//public class AddressBookService implements IAddressBookService {
+//
+//    @Autowired
+//    private AddressBookRepository repository;
+//
+//    @Autowired
+//    private ModelMapper modelMapper;  // For DTO Conversion
+//
+//    // ✅ Cache all contacts
+//    @Override
+//    @Cacheable(value = "contacts")
+//    public List<AddressBookEntry> getAllContacts() {
+//        System.out.println("📢 Fetching from Database...");
+//        return repository.findAll();
+//    }
+//
+//    @Override
+//    public Optional<AddressBookEntry> getContactById(Long id) {
+//        return repository.findById(id);
+//    }
+//
+//    // ✅ Evict cache when a new contact is added
+//    @Override
+//    @CacheEvict(value = "contacts", allEntries = true)
+//    public AddressBookEntry addContact(AddressBookDTO contactDTO) {
+//        System.out.println("🗑️ Clearing Cache: New contact added!");
+//        AddressBookEntry contact = modelMapper.map(contactDTO, AddressBookEntry.class);
+//        return repository.save(contact);
+//    }
+//
+//    // ✅ Evict cache when a contact is updated
+//    @Override
+//    @CacheEvict(value = "contacts", allEntries = true)
+//    public AddressBookEntry updateContact(Long id, AddressBookDTO updatedContactDTO) {
+//        Optional<AddressBookEntry> existingContact = repository.findById(id);
+//        if (existingContact.isPresent()) {
+//            AddressBookEntry contact = modelMapper.map(updatedContactDTO, AddressBookEntry.class);
+//            contact.setId(id);
+//            System.out.println("🗑️ Clearing Cache: Contact updated!");
+//            return repository.save(contact);
+//        }
+//        return null;
+//    }
+//
+//    // ✅ Evict cache when a contact is deleted
+//    @Override
+//    @CacheEvict(value = "contacts", allEntries = true)
+//    public void deleteContact(Long id) {
+//        System.out.println("🗑️ Clearing Cache: Contact deleted!");
+//        repository.deleteById(id);
+//    }
+//}
 
 
 //UC4
