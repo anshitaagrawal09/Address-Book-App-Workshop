@@ -8,6 +8,7 @@ import com.example.addressBookApp.model.AddressBookEntry;
 import com.example.addressBookApp.repository.AddressBookRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -25,8 +26,18 @@ public class AddressBookService implements IAddressBookService {
     @Autowired
     private AddressBookRepository repository;
 
+    private final String profileMessage;
+
     @Autowired
     private ModelMapper modelMapper;  // For DTO Conversion
+
+    // ✅ Inject profile-specific bean
+    @Autowired
+    public AddressBookService(@Qualifier("devBean") String profileMessage) {
+        this.profileMessage = profileMessage;
+        logger.info("Active Profile Message: {}", profileMessage);
+    }
+
 
     // ✅ Cache all contacts
     @Override
