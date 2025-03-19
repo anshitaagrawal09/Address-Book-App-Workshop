@@ -2,6 +2,7 @@ package com.example.addressBookApp.service;
 
 //UC12
 
+
 import com.example.addressBookApp.dto.AddressBookDTO;
 import com.example.addressBookApp.interfaces.IAddressBookService;
 import com.example.addressBookApp.model.AddressBookEntry;
@@ -29,6 +30,9 @@ public class AddressBookService implements IAddressBookService {
     private final String profileMessage;
 
     @Autowired
+    private MessageProducer messageProducer; // Inject RabbitMQ Producer
+
+    @Autowired
     private ModelMapper modelMapper;  // For DTO Conversion
 
     // ✅ Inject profile-specific bean
@@ -43,6 +47,7 @@ public class AddressBookService implements IAddressBookService {
     @Override
     @Cacheable(value = "contacts")
     public List<AddressBookEntry> getAllContacts() {
+        System.out.println("📢 Fetching from Database...");
         logger.info("Fetching all contacts from the database...");
         List<AddressBookEntry> contacts = repository.findAll();
         logger.debug("Retrieved {} contacts from the database.", contacts.size());
@@ -51,6 +56,7 @@ public class AddressBookService implements IAddressBookService {
 
     @Override
     public Optional<AddressBookEntry> getContactById(Long id) {
+
         logger.info("Fetching contact with ID: {}", id);
         Optional<AddressBookEntry> contact = repository.findById(id);
         if (contact.isPresent()) {
@@ -69,6 +75,11 @@ public class AddressBookService implements IAddressBookService {
         AddressBookEntry contact = modelMapper.map(contactDTO, AddressBookEntry.class);
         AddressBookEntry savedContact = repository.save(contact);
         logger.info("New contact added successfully with ID: {}", savedContact.getId());
+
+        // ✅ Send message to RabbitMQ
+        String message = "New contact added: " + savedContact.getName();
+        messageProducer.sendMessage(message);
+
         return savedContact;
     }
 
