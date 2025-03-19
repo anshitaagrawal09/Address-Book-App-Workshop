@@ -76,9 +76,13 @@ public class AddressBookService implements IAddressBookService {
         AddressBookEntry savedContact = repository.save(contact);
         logger.info("New contact added successfully with ID: {}", savedContact.getId());
 
+        // ✅ Publish RabbitMQ Event
+        String contactDetails = "New Contact: " + contact.getName() + ", " + contact.getPhoneNumber();
+        messageProducer.publishContactAddedEvent(contactDetails);
+
         // ✅ Send message to RabbitMQ
-        String message = "New contact added: " + savedContact.getName();
-        messageProducer.sendMessage(message);
+//        String message = "New contact added: " + savedContact.getName();
+//        messageProducer.sendMessage(message);
 
         return savedContact;
     }
