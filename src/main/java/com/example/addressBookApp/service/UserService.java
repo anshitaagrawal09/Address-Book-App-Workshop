@@ -38,6 +38,9 @@ public class UserService implements IUserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private MessageProducer messageProducer; // Inject the event publisher
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -52,6 +55,11 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         logger.info("User registered successfully: {}", user.getEmail());
+
+        // Publish RabbitMQ event after successful registration
+        messageProducer.publishUserRegistrationEvent(user.getEmail());
+
+
         return "User registered successfully. Please login to continue.";
     }
 
