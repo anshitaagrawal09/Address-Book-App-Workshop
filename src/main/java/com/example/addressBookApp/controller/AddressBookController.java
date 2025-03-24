@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:4200") // ✅ Allow Angular frontend
 @Tag(name = "Address Book API", description = "CRUD operations for managing contacts")
 @RestController
 @RequestMapping("/api/addressbook")
